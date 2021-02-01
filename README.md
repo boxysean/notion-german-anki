@@ -12,3 +12,9 @@ This project is to allow my Notion German bank to be my "source of truth" for my
 1. Run `main.py --token xyz` to generate a deck called `output.apkg`
 2. Import `output.apkg` into Anki on computer
 3. Sync Anki to main database
+
+### Roadmap
+
+- [ ] Deal with German synonyms (each card must be a one-to-N answer). I would need to collect all the entries and make synonyms.
+- [ ] Add sentences to deck, if they exist.
+- [x] Add part of speech demarcation to cards.
