@@ -88,6 +88,31 @@ GENANKI_NOUN_MODEL = genanki.Model(
 )
 
 
+GENANKI_VERB_MODEL = genanki.Model(
+    model_id=2064417967,  # hard coded
+    name="German Verb Model",
+    fields=[
+        {"name": "German"},
+        {"name": "English"},
+        {"name": "PartOfSpeech"},
+        {"name": "Conjugation"},
+    ],
+    templates=[
+        {
+            "name": "English -> German",
+            "qfmt": "{{English}} ({{PartOfSpeech}})",
+            "afmt": '{{FrontSide}}<hr id="answer">{{German}}<br />{{Conjugation}}',
+        },
+        {
+            "name": "German -> English",
+            "qfmt": "{{Gender}} {{German}}",
+            "afmt": '{{FrontSide}}<hr id="answer">{{English}} ({{PartOfSpeech}})',
+        },
+    ],
+    css=GENANKI_CSS,
+)
+
+
 GENANKI_PHRASE_MODEL = genanki.Model(
     model_id=1618410619,  # hard coded
     name="German Phrase Model",
@@ -99,11 +124,11 @@ GENANKI_PHRASE_MODEL = genanki.Model(
         {
             "name": "English -> German",
             "qfmt": "{{English}}",
-            "afmt": '{{FrontSide}}<hr id="answer">{{Gender}} {{German}}',
+            "afmt": '{{FrontSide}}<hr id="answer">{{German}}',
         },
         {
             "name": "German -> English",
-            "qfmt": "{{Gender}} {{German}}",
+            "qfmt": "{{German}}",
             "afmt": '{{FrontSide}}<hr id="answer">{{English}}',
         },
     ],
@@ -143,6 +168,16 @@ class GermanBankItem:
                 english=row.english,
                 part_of_speech=row.part_of_speech,
                 gender=row.gender,
+                tags=row.tags,
+            )
+        elif row.part_of_speech == PartsOfSpeech.VERB:
+            return GermanBankVerb(
+                category=row.category,
+                anki_ignore=row.anki_ignore,
+                german=row.german,
+                english=row.english,
+                part_of_speech=row.part_of_speech,
+                conjugation=row.conjugation,
                 tags=row.tags,
             )
         else:
@@ -200,6 +235,24 @@ class GermanBankNoun(GermanBankVocabulary):
                 self.english,
                 self.part_of_speech,
                 self.gender,
+            ],
+            tags=[self.part_of_speech] + self.tags,
+        )
+
+
+@dataclasses.dataclass
+class GermanBankVerb(GermanBankVocabulary):
+    part_of_speech: PartsOfSpeech
+    conjugation: str
+
+    def to_german_note(self) -> GermanNote:
+        return GermanNote(
+            model=GENANKI_VERB_MODEL,
+            fields=[
+                self.german,
+                self.english,
+                self.part_of_speech,
+                self.conjugation,
             ],
             tags=[self.part_of_speech] + self.tags,
         )

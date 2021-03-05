@@ -18,3 +18,4 @@ This project is to allow my Notion German bank to be my "source of truth" for my
 - [ ] Deal with German synonyms (each card must be a one-to-N answer). I would need to collect all the entries and make synonyms.
 - [ ] Add sentences to deck, if they exist.
 - [x] Add part of speech demarcation to cards.
+- [x] Add conjugation for verbs
