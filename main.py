@@ -101,11 +101,11 @@ GENANKI_VERB_MODEL = genanki.Model(
         {
             "name": "English -> German",
             "qfmt": "{{English}} ({{PartOfSpeech}})",
-            "afmt": '{{FrontSide}}<hr id="answer">{{German}}<br />{{Conjugation}}',
+            "afmt": '{{FrontSide}}<hr id="answer">{{German}}<br /><br />{{Conjugation}}',
         },
         {
             "name": "German -> English",
-            "qfmt": "{{Gender}} {{German}}",
+            "qfmt": "{{German}}",
             "afmt": '{{FrontSide}}<hr id="answer">{{English}} ({{PartOfSpeech}})',
         },
     ],
