@@ -32,6 +32,10 @@ class MissingPartOfSpeech(ValueError):
     pass
 
 
+class MissingGender(ValueError):
+    pass
+
+
 GENANKI_CSS = """.card {
  font-family: arial;
  font-size: 20px;
@@ -227,6 +231,11 @@ class GermanBankNoun(GermanBankVocabulary):
     part_of_speech: PartsOfSpeech
     gender: str
 
+    def __post_init__(self):
+        super().__post_init__()
+        if not self.gender:
+            raise MissingGender()
+
     def to_german_note(self) -> GermanNote:
         return GermanNote(
             model=GENANKI_NOUN_MODEL,
@@ -293,6 +302,9 @@ def main(token: str) -> None:
             german_bank_item = GermanBankItem.from_notion_row(row)
         except MissingPartOfSpeech:
             logging.warning("%s is missing part of speech, skipping...", row.german)
+            continue
+        except MissingGender:
+            logging.warning("%s is missing gender, skipping...", row.german)
             continue
 
         german_note = german_bank_item.to_german_note()
