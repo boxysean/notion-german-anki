@@ -1,3 +1,0 @@
-click==7.1.2
-genanki==0.10.1
-notion==0.0.27

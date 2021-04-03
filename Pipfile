@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+click = "==7.1.2"
+genanki = "==0.10.1"
+notion = "==0.0.27"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
