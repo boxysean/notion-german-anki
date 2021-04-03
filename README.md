@@ -4,13 +4,14 @@
 
 This project is to allow my Notion German bank to be my "source of truth" for my Anki dictionary. It has the following aims:
 
-1. Easily extract Notion table to create Anki notes / cards, with specific tags for my ease-of-use.
-2. Retain the Anki stats if I make any updates.
+- Easily extract Notion table to create Anki notes / cards, with specific tags for my ease-of-use.
+- Retain the Anki stats if I make any updates.
+- Generate grammar cards that can easily be imported
 
 ### How to run
 
 1. Install python requirements with `pipenv install`
-2. Run `main.py --token xyz` to generate a deck called `output.apkg`
+2. Run `python -m sean_learns_german.main --token xyz` to generate a deck called `output.apkg`
 3. Import `output.apkg` into Anki on computer
 4. Sync Anki to main database
 
