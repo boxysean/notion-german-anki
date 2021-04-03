@@ -13,3 +13,8 @@ class PartsOfSpeech(str, enum.Enum):
     ADVERB = "adverb"
     CONJUNCTION = "conjunction"
     NUMBER = "number"
+
+
+class GermanCases(str, enum.Enum):
+    NOMINATIVE = "nominative"
+    ACCUSATIVE = "accusative"

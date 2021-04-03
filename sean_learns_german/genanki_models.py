@@ -64,13 +64,18 @@ GENANKI_VERB_MODEL = genanki.Model(
         {"name": "German"},
         {"name": "English"},
         {"name": "PartOfSpeech"},
-        {"name": "Conjugation"},
+        {"name": "Conjugation (ich)"},
+        {"name": "Conjugation (du)"},
+        {"name": "Conjugation (er/sie/es)"},
+        {"name": "Conjugation (wir)"},
+        {"name": "Conjugation (ihr)"},
+        {"name": "Conjugation (Sie)"},
     ],
     templates=[
         {
             "name": "English -> German",
             "qfmt": "{{English}} ({{PartOfSpeech}})",
-            "afmt": '{{FrontSide}}<hr id="answer">{{German}}<br /><br />{{Conjugation}}',
+            "afmt": '{{FrontSide}}<hr id="answer">{{German}}<br /><br />ich {{Conjugation (ich)}}, du {{Conjugation (du)}}, er/sie/es {{Conjugation (er/sie/es)}}, wir {{Conjugation (wir)}}, ihr {{Conjugation (ihr)}}, Sie {{Conjugation (Sie)}}',
         },
         {
             "name": "German -> English",

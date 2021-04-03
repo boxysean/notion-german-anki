@@ -10,7 +10,7 @@ import notion.collection
 
 
 from sean_learns_german.models import GermanBankItem, GermanBankVocabulary, GermanBankNoun, GermanBankVerb, GermanBankPhrase, GermanNote
-from sean_learns_german.constants import BankCategory, PartsOfSpeech
+from sean_learns_german.constants import BankCategory, PartsOfSpeech, GermanCases
 from sean_learns_german.errors import MissingGender, MissingPartOfSpeech
 
 
@@ -23,14 +23,18 @@ NOTION_GERMAN_BANK_VIEW_URL = "https://www.notion.so/0bf4b6fd23af40dba8d4c23206b
 
 
 @click.group()
-def cli():
+def cli_group():
     pass
 
 
-@cli.command()
+@cli_group.command()
 @click.option("--token", type=str, help="Get from token_v2 value stored in www.notion.so cookies. Link: chrome://settings/cookies/detail?site=www.notion.so", required=True,)
 @click.option("--output-filename", type=str, default="output.apkg")
 def generate_decks(token: str, output_filename: str) -> None:
+    """
+    Scrapes the Notion table bank, and converts them into Anki decks ready for importing.
+    """
+
     client = notion.client.NotionClient(token_v2=token)
     view = client.get_collection_view(NOTION_GERMAN_BANK_VIEW_URL)
 
@@ -69,6 +73,34 @@ def generate_decks(token: str, output_filename: str) -> None:
     click.echo(f"Complete! Now import {output_filename} to Anki, fix any changes, and sync Anki to AnkiCloud.")
 
 
+@cli_group.command()
+@click.option("--token", type=str, help="Get from token_v2 value stored in www.notion.so cookies. Link: chrome://settings/cookies/detail?site=www.notion.so", required=True,)
+@click.option("--output-filename", type=str, default="sentences_output.apkg")
+@click.option("--case", type=click.Choice([case.value for case in GermanCases]), required=True)
+def generate_sentences(token: str, output_filename: str, case: GermanCases):
+    """
+    Generates sentences
+    """
+
+    client = notion.client.NotionClient(token_v2=token)
+    view = client.get_collection_view(NOTION_GERMAN_BANK_VIEW_URL)
+
+    import pprint
+
+    for row in view.collection.get_rows():
+        if row.part_of_speech == 'verb':
+            pprint.pprint(dir(row))
+
+    if case == GermanCases.NOMINATIVE:
+        pass
+        # x number of times
+        # Get random combinations of nouns and verbs
+        # verbs must be fully conjugated
+
+    else:
+        raise NotImplementedError()
+
+
 
 if __name__ == "__main__":
-    cli()
+    cli_group()

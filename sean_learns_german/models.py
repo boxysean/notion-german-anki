@@ -51,7 +51,12 @@ class GermanBankItem:
                 german=row.german,
                 english=row.english,
                 part_of_speech=row.part_of_speech,
-                conjugation=row.conjugation,
+                conj_ich_1ps=row.conj_ich_1ps,
+                conj_du_2ps=row.conj_du_2ps,
+                conj_er_3ps=row.conj_er_3ps,
+                conj_wir_1pp=row.conj_wir_1pp,
+                conj_ihr_2pp=row.conj_ihr_2pp,
+                conj_sie_3pp=row.conj_sie_3pp,
                 tags=row.tags,
             )
         else:
@@ -122,7 +127,12 @@ class GermanBankNoun(GermanBankVocabulary):
 @dataclasses.dataclass
 class GermanBankVerb(GermanBankVocabulary):
     part_of_speech: PartsOfSpeech
-    conjugation: str
+    conj_ich_1ps: str
+    conj_du_2ps: str
+    conj_er_3ps: str
+    conj_wir_1pp: str
+    conj_ihr_2pp: str
+    conj_sie_3pp: str
 
     def to_german_note(self) -> GermanNote:
         return GermanNote(
@@ -131,7 +141,12 @@ class GermanBankVerb(GermanBankVocabulary):
                 self.german,
                 self.english,
                 self.part_of_speech,
-                self.conjugation,
+                self.conj_ich_1ps,
+                self.conj_du_2ps,
+                self.conj_er_3ps,
+                self.conj_wir_1pp,
+                self.conj_ihr_2pp,
+                self.conj_sie_3pp,
             ],
             tags=[self.part_of_speech] + self.tags,
         )
