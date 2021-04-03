@@ -11,7 +11,7 @@ This project is to allow my Notion German bank to be my "source of truth" for my
 ### How to run
 
 1. Install python requirements with `pipenv install`
-2. Run `python -m sean_learns_german.main --token xyz` to generate a deck called `output.apkg`
+2. Run `python -m sean_learns_german.cli generate-decks --token xyz` to generate a deck called `output.apkg`
 3. Import `output.apkg` into Anki on computer
 4. Sync Anki to main database
 

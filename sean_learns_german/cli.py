@@ -22,9 +22,15 @@ logging.basicConfig(
 NOTION_GERMAN_BANK_VIEW_URL = "https://www.notion.so/0bf4b6fd23af40dba8d4c23206b2f1e3?v=e2f51d7caf4a43c7a791304984f019bb"
 
 
-@click.command()
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
 @click.option("--token", type=str, help="Get from token_v2 value stored in www.notion.so cookies. Link: chrome://settings/cookies/detail?site=www.notion.so", required=True,)
-def main(token: str) -> None:
+@click.option("--output-filename", type=str, default="output.apkg")
+def generate_decks(token: str, output_filename: str) -> None:
     client = notion.client.NotionClient(token_v2=token)
     view = client.get_collection_view(NOTION_GERMAN_BANK_VIEW_URL)
 
@@ -59,8 +65,10 @@ def main(token: str) -> None:
         else:
             decks[german_bank_item.category].add_note(german_note)
 
-    genanki.Package(decks.values()).write_to_file('output.apkg')
+    genanki.Package(decks.values()).write_to_file(output_filename)
+    click.echo(f"Complete! Now import {output_filename} to Anki, fix any changes, and sync Anki to AnkiCloud.")
+
 
 
 if __name__ == "__main__":
-    main()
+    cli()
