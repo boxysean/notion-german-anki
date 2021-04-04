@@ -1,13 +1,12 @@
 import dataclasses
 import typing
 
-import genanki
 import notion.client
 import notion.collection
 
 from sean_learns_german.constants import BankCategory, PartsOfSpeech, NounGender, SpeechPerspective
-from sean_learns_german.genanki_models import GermanNote, GENANKI_NOUN_MODEL, GENANKI_PHRASE_MODEL, GENANKI_VERB_MODEL, GENANKI_VOCABULARY_MODEL
 from sean_learns_german.errors import MissingGender, MissingPartOfSpeech
+from sean_learns_german.models.genanki_models import GermanNote, GENANKI_NOUN_MODEL, GENANKI_PHRASE_MODEL, GENANKI_VERB_MODEL, GENANKI_VOCABULARY_MODEL
 
 
 @dataclasses.dataclass
@@ -153,22 +152,6 @@ class GermanBankVerb(GermanBankVocabulary):
             tags=[self.part_of_speech] + self.tags,
         )
 
-    def conjugate(self, perspective: SpeechPerspective):
-        if perspective == SpeechPerspective.FIRST_PERSON_SINGULAR:
-            return self.conj_ich_1ps
-        elif perspective == SpeechPerspective.SECOND_PERSON_SINGULAR:
-            return self.conj_du_2ps
-        elif perspective == SpeechPerspective.THIRD_PERSON_SINGULAR:
-            return self.conj_er_3ps
-        elif perspective == SpeechPerspective.FIRST_PERSON_PLURAL:
-            return self.conj_wir_1pp
-        elif perspective == SpeechPerspective.SECOND_PERSON_PLURAL:
-            return self.conj_ihr_2pp
-        elif perspective == SpeechPerspective.THIRD_PERSON_PLURAL:
-            return self.conj_sie_3pp
-        else:
-            raise ValueError(perspective)
-
 
 @dataclasses.dataclass
 class GermanBankPhrase(GermanBankItem):
@@ -181,3 +164,73 @@ class GermanBankPhrase(GermanBankItem):
             ],
             tags=self.tags,
         )
+
+
+BANK_NOUNS = [
+    GermanBankNoun.make(
+        category="Vocabulary",
+        german="Mann",
+        plural="Männer",
+        english="man",
+        part_of_speech=PartsOfSpeech.NOUN,
+        gender=NounGender.MASCULINE,
+    ),
+    GermanBankNoun.make(
+        category="Vocabulary",
+        german="Frau",
+        plural="Frauen",
+        english="woman",
+        part_of_speech=PartsOfSpeech.NOUN,
+        gender=NounGender.FEMININE,
+    ),
+    GermanBankNoun.make(
+        category="Vocabulary",
+        german="Angebot",
+        plural="Angebote",
+        english="agreement",
+        part_of_speech=PartsOfSpeech.NOUN,
+        gender=NounGender.NEUTER,
+    ),
+]
+
+BANK_VERBS = [
+    GermanBankVerb.make(
+        category="Vocabulary",
+        german="haben",
+        english="to have",
+        part_of_speech=PartsOfSpeech.VERB,
+        requires_accusative=True,
+        conj_ich_1ps="habe",
+        conj_du_2ps="habst",
+        conj_er_3ps="hat",
+        conj_wir_1pp="haben",
+        conj_ihr_2pp="habt",
+        conj_sie_3pp="haben",
+    ),
+    GermanBankVerb.make(
+        category="Vocabulary",
+        german="sehen",
+        english="to see",
+        part_of_speech=PartsOfSpeech.VERB,
+        requires_accusative=True,
+        conj_ich_1ps="sehe",
+        conj_du_2ps="siehst",
+        conj_er_3ps="sieht",
+        conj_wir_1pp="sehen",
+        conj_ihr_2pp="seht",
+        conj_sie_3pp="sehen",
+    ),
+    GermanBankVerb.make(
+        category="Vocabulary",
+        german="sein",
+        english="to be",
+        part_of_speech=PartsOfSpeech.VERB,
+        requires_accusative=False,
+        conj_ich_1ps="bin",
+        conj_du_2ps="bist",
+        conj_er_3ps="ist",
+        conj_wir_1pp="sind",
+        conj_ihr_2pp="seid",
+        conj_sie_3pp="sind",
+    ),
+]

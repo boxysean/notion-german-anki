@@ -22,12 +22,9 @@ class PartsOfSpeech(str, enum.Enum):
 
 
 class SpeechPerspective(str, enum.Enum):
-    FIRST_PERSON_SINGULAR = "first-person singular"
-    SECOND_PERSON_SINGULAR = "second-person singular"
-    THIRD_PERSON_SINGULAR = "third-person singular"
-    FIRST_PERSON_PLURAL = "first-person plural"
-    SECOND_PERSON_PLURAL = "second-person plural"
-    THIRD_PERSON_PLURAL = "third-person plural"
+    FIRST_PERSON = "first-person"
+    SECOND_PERSON = "second-person"
+    THIRD_PERSON = "third-person"
 
 
 class GermanCase(str, enum.Enum):
