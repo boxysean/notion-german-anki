@@ -1,6 +1,12 @@
 import genanki
 
 
+class GermanNote(genanki.Note):
+    @property
+    def guid(self):
+        return genanki.guid_for(self.fields[0])
+
+
 GENANKI_CSS = """.card {
   font-family: arial;
   font-size: 20px;

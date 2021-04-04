@@ -5,15 +5,9 @@ import genanki
 import notion.client
 import notion.collection
 
-from sean_learns_german.constants import BankCategory, PartsOfSpeech
-from sean_learns_german.genanki_models import GENANKI_NOUN_MODEL, GENANKI_PHRASE_MODEL, GENANKI_VERB_MODEL, GENANKI_VOCABULARY_MODEL
+from sean_learns_german.constants import BankCategory, PartsOfSpeech, NounGender, SpeechPerspective
+from sean_learns_german.genanki_models import GermanNote, GENANKI_NOUN_MODEL, GENANKI_PHRASE_MODEL, GENANKI_VERB_MODEL, GENANKI_VOCABULARY_MODEL
 from sean_learns_german.errors import MissingGender, MissingPartOfSpeech
-
-
-class GermanNote(genanki.Note):
-    @property
-    def guid(self):
-        return genanki.guid_for(self.fields[0])
 
 
 @dataclasses.dataclass
@@ -23,6 +17,14 @@ class GermanBankItem:
     german: str
     english: str
     tags: typing.List[str]
+
+    @classmethod
+    def make(cls, **kwargs):
+        return cls(
+            anki_ignore=False,
+            tags=[],
+            **kwargs
+        )
 
     @classmethod
     def from_notion_row(cls, row: notion.collection.CollectionRowBlock) -> "GermanBankItem":
@@ -103,8 +105,8 @@ class GermanBankVocabulary(GermanBankItem):
 
 @dataclasses.dataclass
 class GermanBankNoun(GermanBankVocabulary):
-    part_of_speech: PartsOfSpeech
-    gender: str
+    gender: NounGender
+    plural: str
 
     def __post_init__(self):
         super().__post_init__()
@@ -126,7 +128,7 @@ class GermanBankNoun(GermanBankVocabulary):
 
 @dataclasses.dataclass
 class GermanBankVerb(GermanBankVocabulary):
-    part_of_speech: PartsOfSpeech
+    requires_accusative: bool
     conj_ich_1ps: str
     conj_du_2ps: str
     conj_er_3ps: str
@@ -150,6 +152,22 @@ class GermanBankVerb(GermanBankVocabulary):
             ],
             tags=[self.part_of_speech] + self.tags,
         )
+
+    def conjugate(self, perspective: SpeechPerspective):
+        if perspective == SpeechPerspective.FIRST_PERSON_SINGULAR:
+            return self.conj_ich_1ps
+        elif perspective == SpeechPerspective.SECOND_PERSON_SINGULAR:
+            return self.conj_du_2ps
+        elif perspective == SpeechPerspective.THIRD_PERSON_SINGULAR:
+            return self.conj_er_3ps
+        elif perspective == SpeechPerspective.FIRST_PERSON_PLURAL:
+            return self.conj_wir_1pp
+        elif perspective == SpeechPerspective.SECOND_PERSON_PLURAL:
+            return self.conj_ihr_2pp
+        elif perspective == SpeechPerspective.THIRD_PERSON_PLURAL:
+            return self.conj_sie_3pp
+        else:
+            raise ValueError(perspective)
 
 
 @dataclasses.dataclass
