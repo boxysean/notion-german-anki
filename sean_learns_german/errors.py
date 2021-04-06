@@ -1,6 +1,10 @@
-class MissingPartOfSpeech(ValueError):
+class MissingCategory(ValueError):
     pass
 
 
 class MissingGender(ValueError):
+    pass
+
+
+class MissingPartOfSpeech(ValueError):
     pass

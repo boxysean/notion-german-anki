@@ -1,18 +1,18 @@
 import dataclasses
+import logging
 import typing
 
 import notion.client
 import notion.collection
 
-from sean_learns_german.constants import BankCategory, PartsOfSpeech, NounGender, SpeechPerspective
-from sean_learns_german.errors import MissingGender, MissingPartOfSpeech
+from sean_learns_german.constants import BankCategory, PartsOfSpeech, NounGender, SpeechPerspective, GermanCase
+from sean_learns_german.errors import MissingCategory, MissingGender, MissingPartOfSpeech
 from sean_learns_german.models.genanki_models import GermanNote, GENANKI_NOUN_MODEL, GENANKI_PHRASE_MODEL, GENANKI_VERB_MODEL, GENANKI_VOCABULARY_MODEL
 
 
 @dataclasses.dataclass
 class GermanBankItem:
     category: str
-    anki_ignore: bool
     german: str
     english: str
     tags: typing.List[str]
@@ -20,17 +20,18 @@ class GermanBankItem:
     @classmethod
     def make(cls, **kwargs):
         return cls(
-            anki_ignore=False,
             tags=[],
             **kwargs
         )
 
     @classmethod
     def from_notion_row(cls, row: notion.collection.CollectionRowBlock) -> "GermanBankItem":
+        if row.category is None:
+            raise MissingCategory()
+
         if row.category == BankCategory.PHRASE:
             return GermanBankPhrase(
                 category=row.category,
-                anki_ignore=row.anki_ignore,
                 german=row.german,
                 english=row.english,
                 tags=row.tags,
@@ -38,8 +39,8 @@ class GermanBankItem:
         elif row.part_of_speech == PartsOfSpeech.NOUN:
             return GermanBankNoun(
                 category=row.category,
-                anki_ignore=row.anki_ignore,
                 german=row.german,
+                german_plural=row.german_plural,
                 english=row.english,
                 part_of_speech=row.part_of_speech,
                 gender=row.gender,
@@ -48,7 +49,6 @@ class GermanBankItem:
         elif row.part_of_speech == PartsOfSpeech.VERB:
             return GermanBankVerb(
                 category=row.category,
-                anki_ignore=row.anki_ignore,
                 german=row.german,
                 english=row.english,
                 part_of_speech=row.part_of_speech,
@@ -58,12 +58,12 @@ class GermanBankItem:
                 conj_wir_1pp=row.conj_wir_1pp,
                 conj_ihr_2pp=row.conj_ihr_2pp,
                 conj_sie_3pp=row.conj_sie_3pp,
+                requires_case=row.requires_case,
                 tags=row.tags,
             )
         else:
             return GermanBankVocabulary(
                 category=row.category,
-                anki_ignore=row.anki_ignore,
                 german=row.german,
                 english=row.english,
                 part_of_speech=row.part_of_speech,
@@ -105,7 +105,7 @@ class GermanBankVocabulary(GermanBankItem):
 @dataclasses.dataclass
 class GermanBankNoun(GermanBankVocabulary):
     gender: NounGender
-    plural: str
+    german_plural: str
 
     def __post_init__(self):
         super().__post_init__()
@@ -127,13 +127,28 @@ class GermanBankNoun(GermanBankVocabulary):
 
 @dataclasses.dataclass
 class GermanBankVerb(GermanBankVocabulary):
-    requires_accusative: bool
+    requires_case: GermanCase
     conj_ich_1ps: str
     conj_du_2ps: str
     conj_er_3ps: str
     conj_wir_1pp: str
     conj_ihr_2pp: str
     conj_sie_3pp: str
+
+    def __post_init__(self):
+        if self.requires_case is None:
+            logging.warning("Verb %s is missing requires_case, assuming accusative", self.german)
+            self.requires_case = GermanCase.ACCUSATIVE
+        
+        if not all([
+            self.conj_ich_1ps,
+            self.conj_du_2ps,
+            self.conj_er_3ps,
+            self.conj_wir_1pp,
+            self.conj_ihr_2pp,
+            self.conj_sie_3pp,
+        ]):
+            logging.warning("Verb %s is not fully conjugated", self.german)
 
     def to_german_note(self) -> GermanNote:
         return GermanNote(
@@ -170,7 +185,7 @@ BANK_NOUNS = [
     GermanBankNoun.make(
         category="Vocabulary",
         german="Mann",
-        plural="Männer",
+        german_plural="Männer",
         english="man",
         part_of_speech=PartsOfSpeech.NOUN,
         gender=NounGender.MASCULINE,
@@ -178,7 +193,7 @@ BANK_NOUNS = [
     GermanBankNoun.make(
         category="Vocabulary",
         german="Frau",
-        plural="Frauen",
+        german_plural="Frauen",
         english="woman",
         part_of_speech=PartsOfSpeech.NOUN,
         gender=NounGender.FEMININE,
@@ -186,7 +201,7 @@ BANK_NOUNS = [
     GermanBankNoun.make(
         category="Vocabulary",
         german="Angebot",
-        plural="Angebote",
+        german_plural="Angebote",
         english="agreement",
         part_of_speech=PartsOfSpeech.NOUN,
         gender=NounGender.NEUTER,
@@ -199,7 +214,7 @@ BANK_VERBS = [
         german="haben",
         english="to have",
         part_of_speech=PartsOfSpeech.VERB,
-        requires_accusative=True,
+        requires_case=GermanCase.ACCUSATIVE,
         conj_ich_1ps="habe",
         conj_du_2ps="habst",
         conj_er_3ps="hat",
@@ -212,7 +227,7 @@ BANK_VERBS = [
         german="sehen",
         english="to see",
         part_of_speech=PartsOfSpeech.VERB,
-        requires_accusative=True,
+        requires_case=GermanCase.ACCUSATIVE,
         conj_ich_1ps="sehe",
         conj_du_2ps="siehst",
         conj_er_3ps="sieht",
@@ -225,7 +240,7 @@ BANK_VERBS = [
         german="sein",
         english="to be",
         part_of_speech=PartsOfSpeech.VERB,
-        requires_accusative=False,
+        requires_case=GermanCase.NOMINATIVE,
         conj_ich_1ps="bin",
         conj_du_2ps="bist",
         conj_er_3ps="ist",

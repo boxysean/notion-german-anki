@@ -60,8 +60,11 @@ class ArticledNoun(ArticledNounOrPronoun):
     def make_str(self, case: GermanCase) -> str:
         return f"{self.get_article(case)} {self.german_word}"
 
-    def blank_it(self, case: GermanCase) -> str:
-        return f"({self.german_word}, {self.article_type})"
+    def make_english_str(self) -> str:
+        return ("the" if self.article_type == ArticleType.DEFINITE else "a") + " " + self.english_word
+
+    def make_hint(self, case: GermanCase) -> typing.Optional[str]:
+        return f"{self.german_word}, {self.article_type}"
 
 
 @dataclasses.dataclass
@@ -131,12 +134,33 @@ class Pronoun(ArticledNounOrPronoun):
         del case
         return f"{self.get_pronoun()}"
 
-    def blank_it(self, case: GermanCase) -> str:
+    def make_english_str(self) -> str:
+        if self.pronoun_type == PronounType.PERSONAL:
+            if self.perspective == SpeechPerspective.FIRST_PERSON and self.cardinality == Cardinality.SINGULAR:
+                return 'I'
+            elif self.perspective == SpeechPerspective.SECOND_PERSON and self.cardinality == Cardinality.SINGULAR:
+                return 'you'
+            elif self.perspective == SpeechPerspective.THIRD_PERSON and self.cardinality == Cardinality.SINGULAR:
+                if self.gender == NounGender.MASCULINE:
+                    return 'he'
+                elif self.gender == NounGender.FEMININE:
+                    return 'she'
+                elif self.gender == NounGender.NEUTER:
+                    return 'it'
+            elif self.perspective == SpeechPerspective.FIRST_PERSON and self.cardinality == Cardinality.PLURAL:
+                return 'we'
+            elif self.perspective == SpeechPerspective.SECOND_PERSON and self.cardinality == Cardinality.PLURAL:
+                return 'you'
+            elif self.perspective == SpeechPerspective.THIRD_PERSON and self.cardinality == Cardinality.PLURAL:
+                return 'they'
+        raise ValueError()
+
+    def make_hint(self, case: GermanCase) -> typing.Optional[str]:
         del case
         if self.perspective == SpeechPerspective.THIRD_PERSON and self.cardinality == Cardinality.SINGULAR:
-            return f"({self.gender})"
+            return f"{self.gender}"
         else:
-            return f"({self.perspective})"
+            return None
 
 
 @dataclasses.dataclass
@@ -149,7 +173,7 @@ class Verb:
     conj_wir_1pp: str
     conj_ihr_2pp: str
     conj_sie_3pp: str
-    requires_accusative: bool
+    requires_case: GermanCase
 
     def conjugate(self, perspective: SpeechPerspective, cardinality: Cardinality):
         if perspective == SpeechPerspective.FIRST_PERSON and cardinality == Cardinality.SINGULAR:
@@ -180,5 +204,8 @@ class Verb:
             conj_wir_1pp=random_verb.conj_wir_1pp,
             conj_ihr_2pp=random_verb.conj_ihr_2pp,
             conj_sie_3pp=random_verb.conj_sie_3pp,
-            requires_accusative=random_verb.requires_accusative,
+            requires_case=random_verb.requires_case,
         )
+
+    def make_english_str(self) -> str:
+        return self.english_word

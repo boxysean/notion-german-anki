@@ -114,3 +114,24 @@ GENANKI_PHRASE_MODEL = genanki.Model(
     ],
     css=GENANKI_CSS,
 )
+
+
+GENANKI_GRAMMAR_MODEL = genanki.Model(
+    model_id=1572189083,  # hard coded
+    name="German Grammar Model",
+    fields=[
+        {"name": "Complete sentence"},
+        {"name": "Incomplete sentence"},
+        {"name": "English sentence"},
+        {"name": "Hint"},
+        {"name": "Format"},
+    ],
+    templates=[
+        {
+            "name": "Complete the sentence",
+            "qfmt": "{{Incomplete sentence}}{{#Hint}} ({{Hint}}){{/Hint}}",
+            "afmt": '{{FrontSide}}<hr id="answer">{{Complete sentence}}',
+        },
+    ],
+    css=GENANKI_CSS,
+)

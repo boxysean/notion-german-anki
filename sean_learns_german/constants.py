@@ -30,6 +30,8 @@ class SpeechPerspective(str, enum.Enum):
 class GermanCase(str, enum.Enum):
     NOMINATIVE = "nominative"
     ACCUSATIVE = "accusative"
+    DATIVE = "dative"
+    GENITIVE = "genitive"
 
 
 class ArticleType(str, enum.Enum):
