@@ -22,7 +22,7 @@ class ArticledNoun(ArticledNounOrPronoun):
 
     @classmethod
     def random(cls, nouns: typing.List[GermanBankNoun]) -> 'ArticledNoun':
-        random_article_type = random.choice([article_type.value for article_type in list(ArticleType)])
+        random_article_type = random.choice([article_type for article_type in list(ArticleType)])
         random_noun = random.choice(nouns)
 
         return cls(
@@ -34,31 +34,76 @@ class ArticledNoun(ArticledNounOrPronoun):
             cardinality=Cardinality.SINGULAR,
         )
     
-    def get_article(self, case: GermanCase) -> str:
-        if self.article_type == ArticleType.DEFINITE:
-            if self.gender == NounGender.MASCULINE:
-                if case == GermanCase.NOMINATIVE:
-                    return 'der'
-                elif case == GermanCase.ACCUSATIVE:
-                    return 'den'
-            elif self.gender == NounGender.FEMININE:
-                return 'die'
-            elif self.gender == NounGender.NEUTER:
-                return 'das'
-        elif self.article_type == ArticleType.INDEFINITE:
-            if self.gender == NounGender.MASCULINE:
-                if case == GermanCase.NOMINATIVE:
+    def first(self) -> 'ArticledNoun':
+        return ArticledNoun(
+            german_word=self.german_word,
+            english_word=self.english_word,
+            gender=self.gender,
+            article_type=self.article_type.first(),
+            perspective=self.perspective,
+            cardinality=self.cardinality.first(),
+        )
+
+    def rotate(self) -> 'ArticledNoun':
+        # Rotate: article_type, cardinality
+        rotated_cardinality = self.cardinality
+
+        try:
+            rotated_article_type = self.article_type.next()
+        except StopIteration:
+            rotated_article_type = self.article_type.first()
+            try:
+                rotated_cardinality = self.cardinality.next()
+            except StopIteration:
+                rotated_cardinality = self.cardinality.first()
+                raise
+
+        return ArticledNoun(
+            german_word=self.german_word,
+            english_word=self.english_word,
+            gender=self.gender,
+            article_type=rotated_article_type,
+            perspective=self.perspective,
+            cardinality=rotated_cardinality,
+        )
+
+    def get_article(self, case: GermanCase) -> typing.Optional[str]:
+        if self.cardinality == Cardinality.PLURAL:
+            if case == GermanCase.NOMINATIVE or case == GermanCase.ACCUSATIVE:
+                if self.article_type == ArticleType.DEFINITE:
+                    return 'die'
+                elif self.article_type == ArticleType.INDEFINITE:
+                    return None
+        elif self.cardinality == Cardinality.SINGULAR:
+            if self.article_type == ArticleType.DEFINITE:
+                if self.gender == NounGender.MASCULINE:
+                    if case == GermanCase.NOMINATIVE:
+                        return 'der'
+                    elif case == GermanCase.ACCUSATIVE:
+                        return 'den'
+                elif self.gender == NounGender.FEMININE:
+                    return 'die'
+                elif self.gender == NounGender.NEUTER:
+                    return 'das'
+            elif self.article_type == ArticleType.INDEFINITE:
+                if self.gender == NounGender.MASCULINE:
+                    if case == GermanCase.NOMINATIVE:
+                        return 'ein'
+                    elif case == GermanCase.ACCUSATIVE:
+                        return 'einen'
+                elif self.gender == NounGender.FEMININE:
+                    return 'eine'
+                elif self.gender == NounGender.NEUTER:
                     return 'ein'
-                elif case == GermanCase.ACCUSATIVE:
-                    return 'einen'
-            elif self.gender == NounGender.FEMININE:
-                return 'eine'
-            elif self.gender == NounGender.NEUTER:
-                return 'ein'
-        raise ValueError(f"Unexpected article type, gender, and/or case: {self.article_type}, {self.gender}, {case}")
+        raise ValueError(f"Unexpected article type, gender, case, and/or cardinality: {self.article_type}, {self.gender}, {case}, {self.cardinality}")
 
     def make_str(self, case: GermanCase) -> str:
-        return f"{self.get_article(case)} {self.german_word}"
+        article = self.get_article(case)
+
+        if article:
+            return f"{self.get_article(case)} {self.german_word}"
+        else:
+            return self.german_word
 
     def make_english_str(self) -> str:
         return ("the" if self.article_type == ArticleType.DEFINITE else "a") + " " + self.english_word
@@ -74,13 +119,17 @@ class Pronoun(ArticledNounOrPronoun):
     gender: typing.Optional[NounGender]
     cardinality: Cardinality
 
+    def __post_init__(self):
+        if self.gender is None and self.perspective == SpeechPerspective.THIRD_PERSON and self.cardinality == Cardinality.SINGULAR:
+            raise ValueError("Gender cannot be None with a third-person singular pronoun")
+
     @classmethod
     def random(cls) -> 'Pronoun':
-        random_perspective = random.choice([perspective.value for perspective in list(SpeechPerspective)])
-        random_cardinality = random.choice([cardinality.value for cardinality in list(Cardinality)])
+        random_perspective = random.choice([perspective for perspective in list(SpeechPerspective)])
+        random_cardinality = random.choice([cardinality for cardinality in list(Cardinality)])
 
         if random_perspective == SpeechPerspective.THIRD_PERSON and random_cardinality == Cardinality.SINGULAR:
-            random_gender_or_none = random.choice([gender.value for gender in list(NounGender)])
+            random_gender_or_none = random.choice([gender for gender in list(NounGender)])
         else:
             random_gender_or_none = None
 
@@ -89,6 +138,45 @@ class Pronoun(ArticledNounOrPronoun):
             perspective=random_perspective,
             gender=random_gender_or_none,
             cardinality=random_cardinality,
+        )
+
+    def first(self) -> 'Pronoun':
+        return Pronoun(
+            perspective=self.perspective.first(),
+            cardinality=self.cardinality.first(),
+            pronoun_type=self.pronoun_type.first(),
+            gender=self.gender,
+        )
+
+    def rotate(self) -> 'Pronoun':
+        rotated_cardinality = self.cardinality
+        rotated_pronoun_type = self.pronoun_type
+
+        try:
+            rotated_speech_perspective = self.perspective.next()
+        except StopIteration:
+            rotated_speech_perspective = self.perspective.first()
+            try:
+                rotated_cardinality = self.cardinality.next()
+            except StopIteration:
+                rotated_cardinality = self.cardinality.first()
+                raise
+                # try:
+                #     rotated_pronoun_type = self.pronoun_type.next()
+                # except StopIteration:
+                #     rotated_pronoun_type = self.pronoun_type.first()
+                #     raise
+
+        if rotated_speech_perspective == SpeechPerspective.THIRD_PERSON and rotated_cardinality == Cardinality.SINGULAR:
+            rotated_gender = random.choice([noun_gender for noun_gender in list(NounGender)])
+        else:
+            rotated_gender = None
+
+        return Pronoun(
+            perspective=rotated_speech_perspective,
+            cardinality=rotated_cardinality,
+            pronoun_type=rotated_pronoun_type,
+            gender=rotated_gender,
         )
 
     def get_pronoun(self) -> str:
@@ -113,12 +201,12 @@ class Pronoun(ArticledNounOrPronoun):
                 return 'Sie'
         elif self.pronoun_type == PronounType.POSSESSIVE:
             if self.perspective == SpeechPerspective.FIRST_PERSON and self.cardinality == Cardinality.SINGULAR:
-                if self.gender == NounGender.FEMININE or plural:
+                if self.gender == NounGender.FEMININE:
                     return 'meine'
                 elif self.gender in [NounGender.MASCULINE, NounGender.NEUTER]:
                     return 'mein'
             elif self.perspective == SpeechPerspective.SECOND_PERSON and self.cardinality == Cardinality.SINGULAR:
-                if self.gender == NounGender.FEMININE or plural:
+                if self.gender == NounGender.FEMININE:
                     return 'deine'
                 elif self.gender in [NounGender.MASCULINE, NounGender.NEUTER]:
                     return 'dein'

@@ -14,7 +14,7 @@ from sean_learns_german.constants import BankCategory, PartsOfSpeech, GermanCase
 from sean_learns_german.errors import MissingCategory, MissingGender, MissingPartOfSpeech
 from sean_learns_german.models.notion_models import GermanBankItem, GermanBankVocabulary, GermanBankNoun, GermanBankVerb, GermanBankPhrase, BANK_NOUNS, BANK_VERBS
 from sean_learns_german.models.genanki_models import GermanNote, GENANKI_GRAMMAR_MODEL
-from sean_learns_german.models.german_models import ArticledNoun, Pronoun, Verb
+from sean_learns_german.models.german_models import ArticledNounOrPronoun, ArticledNoun, Pronoun, Verb
 
 
 logging.basicConfig(
@@ -86,78 +86,106 @@ def generate_sentences(token: str, output_filename: str):
     """
     Generates sentences
     """
-    def generate_sentence(nouns: typing.List[GermanBankNoun], verbs: typing.List[GermanBankVerb]) -> typing.Optional[GermanNote]:
-        # https://iwillteachyoualanguage.com/learn/german/german-tips/german-cases-explained
-        subject_is_pronoun = random.choice([False, True])
 
-        if subject_is_pronoun:
-            subject = Pronoun.random()
-        else:
-            subject = ArticledNoun.random(nouns=nouns)
 
-        random_verb = Verb.random(verbs=verbs)
-        object_ = ArticledNoun.random(nouns=nouns)
+    @dataclasses.dataclass
+    class BasicSentence:
+        subject: ArticledNounOrPronoun
+        verb: Verb
+        object_: ArticledNoun
 
-        answer_sentence = (
-            f"{subject.make_str(case=GermanCase.NOMINATIVE)} "
-            f"{random_verb.conjugate(subject.perspective, subject.cardinality)} "
-            f"{object_.make_str(case=random_verb.requires_case)}"
-        )
+        @classmethod
+        def make_random(cls, nouns: typing.List[GermanBankNoun], verbs: typing.List[GermanBankVerb]) -> 'BasicSentence':
+            # https://iwillteachyoualanguage.com/learn/german/german-tips/german-cases-explained
+            subject_is_pronoun = random.choice([False, True])
 
-        english_answer_sentence = (
-            f"{subject.make_english_str()} + "
-            f"{random_verb.make_english_str()} + "
-            f"{object_.make_english_str()}"
-        )
+            if subject_is_pronoun:
+                subject = Pronoun.random()
+            else:
+                subject = ArticledNoun.random(nouns=nouns)
 
-        blank_it = random.choice(['subject', 'verb', 'object'])
-
-        if blank_it == 'subject':
-            question_sentence = (
-                "____ "
-                f"{random_verb.conjugate(subject.perspective, subject.cardinality)} "
-                f"{object_.make_str(case=random_verb.requires_case)}"
+            return cls(
+                subject=subject,
+                verb=Verb.random(verbs=verbs),
+                object_=ArticledNoun.random(nouns=nouns),
             )
-            hint = subject.make_hint(case=GermanCase.NOMINATIVE)
-        elif blank_it == 'verb':
-            question_sentence = (
-                f"{subject.make_str(case=GermanCase.NOMINATIVE)} "
-                "____ "
-                f"{object_.make_str(case=random_verb.requires_case)}"
+        
+        def first(self) -> 'BasicSentence':
+            return BasicSentence(
+                subject=self.subject.first(),
+                verb=self.verb,
+                object_=self.object_.first(),
             )
-            hint = random_verb.german_word
-        elif blank_it == 'object':
-            question_sentence = (
-                f"{subject.make_str(case=GermanCase.NOMINATIVE)} "
-                f"{random_verb.conjugate(subject.perspective, subject.cardinality)} "
-                f"____"
+
+        def rotate(self) -> 'BasicSentence':
+            rotated_object = self.object_
+
+            try:
+                rotated_subject = self.subject.rotate()
+            except StopIteration:
+                rotated_subject = self.subject.first()
+                try:
+                    rotated_object = self.object_.rotate()
+                except:
+                    raise
+
+            return BasicSentence(
+                subject=rotated_subject,
+                verb=self.verb,
+                object_=rotated_object,
             )
-            hint = object_.make_hint(case=random_verb.requires_case)
 
-        def _sentence_format(s: str) -> str:
-            return s[0].upper() + s[1:]
+        def to_anki_note(self) -> GermanNote:
+            answer_sentence = (
+                f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
+                f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
+                f"{self.object_.make_str(case=self.verb.requires_case)}"
+            )
 
-        # return question_sentence
-        print(f"{_sentence_format(question_sentence)} ({hint})")
-        print(_sentence_format(answer_sentence))
-        print()
+            english_answer_sentence = (
+                f"{self.subject.make_english_str()} + "
+                f"{self.verb.make_english_str()} + "
+                f"{self.object_.make_english_str()}"
+            )
 
-        response = input("Add? [y/N]")
+            blank_it = random.choice(['subject', 'verb', 'object'])
 
-        if response == 'y':
+            if blank_it == 'subject':
+                question_sentence = (
+                    "____ "
+                    f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
+                    f"{self.object_.make_str(case=self.verb.requires_case)}"
+                )
+                hint = self.subject.make_hint(case=GermanCase.NOMINATIVE)
+            elif blank_it == 'verb':
+                question_sentence = (
+                    f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
+                    "____ "
+                    f"{self.object_.make_str(case=self.verb.requires_case)}"
+                )
+                hint = self.verb.german_word
+            elif blank_it == 'object':
+                question_sentence = (
+                    f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
+                    f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
+                    f"____"
+                )
+                hint = self.object_.make_hint(case=self.verb.requires_case)
+
+            def _sentence_format(s: str) -> str:
+                return s[0].upper() + s[1:]
+
             return GermanNote(
                 model=GENANKI_GRAMMAR_MODEL,
                 fields=[
-                    _sentence_format(question_sentence),
                     _sentence_format(answer_sentence),
+                    _sentence_format(question_sentence),
                     english_answer_sentence,
                     hint if hint is not None else "",
                     "ArticledNounOrPronoun+Verb+Noun",
                 ],
                 tags=["ArticledNounOrPronoun+Verb+Noun",],
             )
-        else:
-            return None
 
 
     nouns = []
@@ -186,23 +214,51 @@ def generate_sentences(token: str, output_filename: str):
     notes = []
     added_count = 0
 
+    basic_sentence = BasicSentence.make_random(nouns, verbs)
+
     # TODO: sometimes add an adjective?
     # TODO: make questions?
     while True:
+        note = basic_sentence.to_anki_note()
+
+        print(f"{note.fields[1]} ({note.fields[3]})")
+        print(note.fields[0])
+        print()
+
         try:
-            note = generate_sentence(nouns, verbs)
+            response = input("Add? [y/R/s]")
         except KeyboardInterrupt:
             click.echo("Exiting!")
             click.echo("")
             break
 
-        if note:
+        if response == 'y':
             deck.add_note(note)
             added_count += 1
             click.echo("Added!")
             click.echo("")
-        else:
-            click.echo("Skipped")
+            try:
+                basic_sentence = basic_sentence.rotate()
+            except StopIteration:
+                basic_sentence = basic_sentence.first()
+                click.echo("Rotated! (back to beginning!)")
+                click.echo("")
+            else:
+                click.echo("Rotated!")
+                click.echo("")
+        elif response == 'r' or response == '':
+            try:
+                basic_sentence = basic_sentence.rotate()
+            except StopIteration:
+                basic_sentence = basic_sentence.first()
+                click.echo("Rotated! (back to beginning!)")
+                click.echo("")
+            else:
+                click.echo("Rotated!")
+                click.echo("")
+        elif response == 's':
+            basic_sentence = BasicSentence.make_random(nouns, verbs)
+            click.echo("New sentence!")
             click.echo("")
 
     if added_count:
