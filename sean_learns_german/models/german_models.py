@@ -3,6 +3,8 @@ import random
 import typing
 
 from sean_learns_german.constants import ArticleType, Cardinality, GermanCase, NounGender, PronounType, SpeechPerspective
+from sean_learns_german.errors import MissingGermanPluralWord
+from sean_learns_german.models.genanki_models import GermanNote, GENANKI_GRAMMAR_MODEL
 from sean_learns_german.models.notion_models import GermanBankNoun, GermanBankVerb
 
 
@@ -13,12 +15,17 @@ class ArticledNounOrPronoun:
 
 @dataclasses.dataclass
 class ArticledNoun(ArticledNounOrPronoun):
-    german_word: str
+    german_word_singular: str
+    german_word_plural: str
     english_word: str
     gender: NounGender
     article_type: ArticleType
     perspective: SpeechPerspective
     cardinality: Cardinality
+
+    def __post_init__(self):
+        if self.cardinality == Cardinality.PLURAL and not self.german_word_plural:
+            raise MissingGermanPluralWord(self.german_word_singular)
 
     @classmethod
     def random(cls, nouns: typing.List[GermanBankNoun]) -> 'ArticledNoun':
@@ -27,7 +34,8 @@ class ArticledNoun(ArticledNounOrPronoun):
 
         return cls(
             article_type=random_article_type,
-            german_word=random_noun.german,
+            german_word_singular=random_noun.german,
+            german_word_plural=random_noun.german_plural,
             english_word=random_noun.english,
             gender=random_noun.gender,
             perspective=SpeechPerspective.THIRD_PERSON,
@@ -36,7 +44,8 @@ class ArticledNoun(ArticledNounOrPronoun):
     
     def first(self) -> 'ArticledNoun':
         return ArticledNoun(
-            german_word=self.german_word,
+            german_word_singular=self.german_word_singular,
+            german_word_plural=self.german_word_plural,
             english_word=self.english_word,
             gender=self.gender,
             article_type=self.article_type.first(),
@@ -59,7 +68,8 @@ class ArticledNoun(ArticledNounOrPronoun):
                 raise
 
         return ArticledNoun(
-            german_word=self.german_word,
+            german_word_singular=self.german_word_singular,
+            german_word_plural=self.german_word_plural,
             english_word=self.english_word,
             gender=self.gender,
             article_type=rotated_article_type,
@@ -99,17 +109,22 @@ class ArticledNoun(ArticledNounOrPronoun):
 
     def make_str(self, case: GermanCase) -> str:
         article = self.get_article(case)
+        
+        if self.cardinality == Cardinality.SINGULAR:
+            word = self.german_word_singular
+        elif self.cardinality == Cardinality.PLURAL:
+            word = self.german_word_plural
 
         if article:
-            return f"{self.get_article(case)} {self.german_word}"
+            return f"{article} {word}"
         else:
-            return self.german_word
+            return word
 
     def make_english_str(self) -> str:
         return ("the" if self.article_type == ArticleType.DEFINITE else "a") + " " + self.english_word
 
     def make_hint(self, case: GermanCase) -> typing.Optional[str]:
-        return f"{self.german_word}, {self.article_type}"
+        return f"{self.english_word}, {self.article_type} {self.cardinality}"
 
 
 @dataclasses.dataclass
@@ -297,3 +312,103 @@ class Verb:
 
     def make_english_str(self) -> str:
         return self.english_word
+
+
+@dataclasses.dataclass
+class BasicSentence:
+    subject: ArticledNounOrPronoun
+    verb: Verb
+    object_: ArticledNoun
+
+    @classmethod
+    def make_random(cls, nouns: typing.List[GermanBankNoun], verbs: typing.List[GermanBankVerb]) -> 'BasicSentence':
+        # https://iwillteachyoualanguage.com/learn/german/german-tips/german-cases-explained
+        subject_is_pronoun = random.choice([False, True])
+
+        if subject_is_pronoun:
+            subject = Pronoun.random()
+        else:
+            subject = ArticledNoun.random(nouns=nouns)
+
+        return cls(
+            subject=subject,
+            verb=Verb.random(verbs=verbs),
+            object_=ArticledNoun.random(nouns=nouns),
+        )
+    
+    def first(self) -> 'BasicSentence':
+        return BasicSentence(
+            subject=self.subject.first(),
+            verb=self.verb,
+            object_=self.object_.first(),
+        )
+
+    def rotate(self) -> 'BasicSentence':
+        rotated_object = self.object_
+
+        try:
+            rotated_subject = self.subject.rotate()
+        except StopIteration:
+            rotated_subject = self.subject.first()
+            try:
+                rotated_object = self.object_.rotate()
+            except:
+                raise
+
+        return BasicSentence(
+            subject=rotated_subject,
+            verb=self.verb,
+            object_=rotated_object,
+        )
+
+    def to_anki_note(self) -> GermanNote:
+        answer_sentence = (
+            f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
+            f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
+            f"{self.object_.make_str(case=self.verb.requires_case)}"
+        )
+
+        english_answer_sentence = (
+            f"{self.subject.make_english_str()} + "
+            f"{self.verb.make_english_str()} + "
+            f"{self.object_.make_english_str()}"
+        )
+
+        blank_it = random.choice(['subject', 'verb', 'object'])
+
+        if blank_it == 'subject':
+            question_sentence = (
+                "____ "
+                f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
+                f"{self.object_.make_str(case=self.verb.requires_case)}"
+            )
+            hint = self.subject.make_hint(case=GermanCase.NOMINATIVE)
+        elif blank_it == 'verb':
+            question_sentence = (
+                f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
+                "____ "
+                f"{self.object_.make_str(case=self.verb.requires_case)}"
+            )
+            hint = self.verb.german_word
+        elif blank_it == 'object':
+            question_sentence = (
+                f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
+                f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
+                f"____"
+            )
+            hint = self.object_.make_hint(case=self.verb.requires_case)
+
+        def _sentence_format(s: str) -> str:
+            return s[0].upper() + s[1:]
+
+        return GermanNote(
+            model=GENANKI_GRAMMAR_MODEL,
+            fields=[
+                _sentence_format(answer_sentence),
+                _sentence_format(question_sentence),
+                english_answer_sentence,
+                hint if hint is not None else "",
+                "BasicSentence",
+            ],
+            tags=["BasicSentence"],
+        )

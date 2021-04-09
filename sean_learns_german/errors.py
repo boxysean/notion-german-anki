@@ -8,3 +8,7 @@ class MissingGender(ValueError):
 
 class MissingPartOfSpeech(ValueError):
     pass
+
+
+class MissingGermanPluralWord(ValueError):
+    pass
