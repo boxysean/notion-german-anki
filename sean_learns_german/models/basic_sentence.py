@@ -7,6 +7,10 @@ from sean_learns_german.models.genanki_models import GermanNote, GENANKI_GRAMMAR
 from sean_learns_german.models.german_models import BankNoun, Verb, Noun, Pronoun, Verb
 
 
+def _sentence_format(s: str) -> str:
+    return s[0].upper() + s[1:]
+
+
 @dataclasses.dataclass
 class BasicSentence:
     subject: typing.Union[Noun, Pronoun]
@@ -54,12 +58,40 @@ class BasicSentence:
             object_=rotated_object,
         )
 
-    def to_anki_note(self) -> GermanNote:
-        answer_sentence = (
+    def get_question_sentence(self, blank_it: str) -> str:
+        if blank_it == 'subject':
+            return _sentence_format(
+                "____ "
+                f"({self.subject.make_hint(case=GermanCase.NOMINATIVE)}) "
+                f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
+                f"{self.object_.make_str(case=self.verb.requires_case)}"
+            )
+        elif blank_it == 'verb':
+            return _sentence_format(
+                f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
+                "____ "
+                f"({self.verb.german_word}) "
+                f"{self.object_.make_str(case=self.verb.requires_case)}"
+            )
+        elif blank_it == 'object':
+            return _sentence_format(
+                f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
+                f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
+                f"____"
+                f"({self.object_.make_hint(case=self.verb.requires_case)})"
+            )
+        else:
+            raise ValueError(blank_it)
+
+    def get_answer_sentence(self) -> str:
+        return _sentence_format(
             f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
             f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
             f"{self.object_.make_str(case=self.verb.requires_case)}"
         )
+
+    def to_anki_note(self) -> GermanNote:
+        answer_sentence = self.get_answer_sentence()
 
         english_answer_sentence = (
             f"{self.subject.make_english_str()} + "
@@ -69,30 +101,7 @@ class BasicSentence:
 
         blank_it = random.choice(['subject', 'verb', 'object'])
 
-        if blank_it == 'subject':
-            question_sentence = (
-                "____ "
-                f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
-                f"{self.object_.make_str(case=self.verb.requires_case)}"
-            )
-            hint = self.subject.make_hint(case=GermanCase.NOMINATIVE)
-        elif blank_it == 'verb':
-            question_sentence = (
-                f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
-                "____ "
-                f"{self.object_.make_str(case=self.verb.requires_case)}"
-            )
-            hint = self.verb.german_word
-        elif blank_it == 'object':
-            question_sentence = (
-                f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
-                f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
-                f"____"
-            )
-            hint = self.object_.make_hint(case=self.verb.requires_case)
-
-        def _sentence_format(s: str) -> str:
-            return s[0].upper() + s[1:]
+        question_sentence = self.get_question_sentence(blank_it)
 
         return GermanNote(
             model=GENANKI_GRAMMAR_MODEL,
@@ -100,7 +109,7 @@ class BasicSentence:
                 _sentence_format(answer_sentence),
                 _sentence_format(question_sentence),
                 english_answer_sentence,
-                hint if hint is not None else "",
+                None,  # Hint... remove it
                 "BasicSentence",
             ],
             tags=["BasicSentence"],
