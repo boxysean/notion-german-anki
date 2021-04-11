@@ -10,10 +10,11 @@ import notion.client
 import notion.collection
 
 
-from sean_learns_german.constants import BankCategory, PartsOfSpeech, GermanCase, SpeechPerspective, ArticleType, NounGender, PronounType, Cardinality
-from sean_learns_german.errors import MissingCategory, MissingGender, MissingGermanPluralWord, MissingPartOfSpeech
-from sean_learns_german.models.notion_models import GermanBankItem, GermanBankVocabulary, GermanBankNoun, GermanBankVerb, GermanBankPhrase, BANK_NOUNS, BANK_VERBS
-from sean_learns_german.models.german_models import ArticledNounOrPronoun, ArticledNoun, BasicSentence, Pronoun, Verb
+from sean_learns_german.constants import BankCategory
+from sean_learns_german.errors import MissingGermanPluralWord
+from sean_learns_german.models.basic_sentence import BasicSentence
+from sean_learns_german.notion_client import GermanBankNotionClient
+from sean_learns_german.words import BANK_NOUNS, BANK_VERBS
 
 
 logging.basicConfig(
@@ -21,35 +22,9 @@ logging.basicConfig(
 )
 
 
-NOTION_GERMAN_BANK_VIEW_URL = "https://www.notion.so/0bf4b6fd23af40dba8d4c23206b2f1e3?v=e2f51d7caf4a43c7a791304984f019bb"
-
-
 @click.group()
 def cli_group():
     pass
-
-
-def _load_bank_items_from_notion(token: str) -> typing.Generator[GermanBankItem, None, None]:
-    client = notion.client.NotionClient(token_v2=token)
-    view = client.get_collection_view(NOTION_GERMAN_BANK_VIEW_URL)
-
-    for row in view.collection.get_rows():
-        try:
-            german_bank_item = GermanBankItem.from_notion_row(row)
-        except MissingPartOfSpeech:
-            logging.warning("%s is missing part of speech, skipping...", row.german)
-            continue
-        except MissingGender:
-            logging.warning("%s is missing gender, skipping...", row.german)
-            continue
-        except MissingCategory:
-            logging.warning("%s is missing category, skipping...", row.german)
-            continue
-
-        if 'anki ignore' in german_bank_item.tags:
-            continue
-
-        yield german_bank_item
 
 
 @cli_group.command()
@@ -70,7 +45,7 @@ def generate_decks(token: str, output_filename: str) -> None:
         ),
     }
 
-    for german_bank_item in _load_bank_items_from_notion(token):
+    for german_bank_item in GermanBankNotionClient(token).load_bank_items():
         german_note = german_bank_item.to_german_note()
         decks[german_bank_item.category].add_note(german_note)
 
@@ -79,29 +54,39 @@ def generate_decks(token: str, output_filename: str) -> None:
 
 
 @cli_group.command()
-@click.option("--token", type=str, help="Get from token_v2 value stored in www.notion.so cookies. Link: chrome://settings/cookies/detail?site=www.notion.so", required=True,)
+@click.option(
+    "--token",
+    type=str,
+    help="Get from token_v2 value stored in www.notion.so cookies. Link: chrome://settings/cookies/detail?site=www.notion.so",
+)
+@click.option("--online/--offline", default=True, help="")
 @click.option("--output-filename", type=str, default="grammar_output.apkg")
-def generate_sentences(token: str, output_filename: str):
+def generate_sentences(token: str, output_filename: str, online: bool):
     """
     Generates sentences
     """
-    nouns = []
-    verbs = []
+    notion_client = GermanBankNotionClient(token)
 
-    for german_bank_item in _load_bank_items_from_notion(token):
-        if german_bank_item.category == BankCategory.VOCABULARY:
-            if german_bank_item.part_of_speech == PartsOfSpeech.NOUN:
-                nouns.append(german_bank_item)
-            elif german_bank_item.part_of_speech == PartsOfSpeech.VERB:
-                if all([
-                    german_bank_item.conj_ich_1ps,
-                    german_bank_item.conj_du_2ps,
-                    german_bank_item.conj_er_3ps,
-                    german_bank_item.conj_wir_1pp,
-                    german_bank_item.conj_ihr_2pp,
-                    german_bank_item.conj_sie_3pp,
-                ]) and 'generate' in german_bank_item.tags:
-                    verbs.append(german_bank_item)
+    if online:
+        if not token:
+            click.abort("Missing token")
+
+        nouns = notion_client.get_bank_nouns()
+        verbs = [
+            verb
+            for verb in notion_client.get_bank_verbs()
+            if all([
+                verb.conj_ich_1ps,
+                verb.conj_du_2ps,
+                verb.conj_er_3ps,
+                verb.conj_wir_1pp,
+                verb.conj_ihr_2pp,
+                verb.conj_sie_3pp,
+            ]) and 'generate' in verb.tags
+        ]
+    else:
+        nouns = BANK_NOUNS
+        verbs = BANK_VERBS
 
     deck = genanki.Deck(
         deck_id=1878326705,  # Hard-coded value selected by me
@@ -144,7 +129,6 @@ def generate_sentences(token: str, output_filename: str):
                 click.echo("")
             
             return res
-
 
         if response == 'y':
             deck.add_note(note)
