@@ -12,6 +12,8 @@ import notion.collection
 
 from sean_learns_german.constants import BankCategory
 from sean_learns_german.errors import MissingGermanPluralWord
+from sean_learns_german.models.genanki_models import GermanNote
+from sean_learns_german.models.german_models import BankWord, Phrase
 from sean_learns_german.models.basic_sentence import BasicSentence
 from sean_learns_german.notion_client import GermanBankNotionClient
 from sean_learns_german.words import BANK_NOUNS, BANK_VERBS
@@ -46,8 +48,14 @@ def generate_decks(token: str, output_filename: str) -> None:
     }
 
     for german_bank_item in GermanBankNotionClient(token).load_bank_items():
-        german_note = german_bank_item.to_german_note()
-        decks[german_bank_item.category].add_note(german_note)
+        if isinstance(german_bank_item, BankWord):
+            deck = decks[BankCategory.VOCABULARY]
+        elif isinstance(german_bank_item, Phrase):
+            deck = decks[BankCategory.PHRASE]
+        else:
+            raise ValueError(f"Unexpected bank item {german_bank_item}")
+
+        german_note = GermanNote.from_german_model(german_bank_item)
 
     genanki.Package(decks.values()).write_to_file(output_filename)
     click.echo(f"Complete! Now import {output_filename} to Anki, fix any changes, and sync Anki to AnkiCloud.")
