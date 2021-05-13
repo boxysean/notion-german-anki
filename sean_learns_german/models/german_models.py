@@ -4,7 +4,7 @@ import random
 import typing
 
 from sean_learns_german.constants import ArticleType, Cardinality, GermanCase, NounGender, PronounType, SpeechPerspective, PartsOfSpeech
-from sean_learns_german.errors import MissingGermanPluralWord
+from sean_learns_german.errors import MissingGender, MissingGermanPluralWord
 
 
 @dataclasses.dataclass

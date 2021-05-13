@@ -1,14 +1,7 @@
-import dataclasses
-import enum
 import logging
-import random
-import typing
 
 import click
 import genanki
-import notion.client
-import notion.collection
-
 
 from sean_learns_german.constants import BankCategory
 from sean_learns_german.errors import MissingGermanPluralWord
@@ -101,7 +94,6 @@ def generate_sentences(token: str, output_filename: str, online: bool):
         name="German::Grammar",
     )
 
-    notes = []
     added_count = 0
 
     basic_sentence = BasicSentence.make_random(nouns, verbs)
