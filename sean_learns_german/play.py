@@ -1,15 +1,16 @@
+import functools
 import random
 import typing
 
-import urwid
-import urwid.raw_display
-import urwid.widget
-from urwid_utils.palette import *
-
+import genanki
 import panwid.keymap
 from panwid.dropdown import *
 from panwid.listbox import *
 from panwid.keymap import *
+import urwid
+import urwid.raw_display
+import urwid.widget
+from urwid_utils.palette import *
 
 from sean_learns_german.notion_client import GermanBankNotionClient
 from sean_learns_german.words import BANK_NOUNS, BANK_VERBS
@@ -104,7 +105,19 @@ def main():
     boxes_grid = urwid.Columns(boxes)
     blank_it = {"blanked": "verb"}  # Lazy hack to make this accessible within sub method
 
-    def generate_all_sentences(blank_it: str) -> typing.List[str]:
+    def add_sentence_to_deck(basic_sentence: BasicSentence, _):
+        deck.add_note(basic_sentence.to_anki_note())
+
+    def generate_all_sentences_as_buttons() -> typing.List[urwid.Button]:
+        return [
+            urwid.Button(
+                label=f"{basic_sentence.get_question_sentence(blank_it['blanked'])} | {basic_sentence.get_answer_sentence()}",
+                on_press=functools.partial(add_sentence_to_deck, basic_sentence),
+            )
+            for basic_sentence in generate_all_sentences()
+        ]
+
+    def generate_all_sentences() -> typing.List[BasicSentence]:
         subject2 = bank_nouns[subject.selected_value].random_noun().first()
         verb2 = bank_verbs[verb.selected_value]
         object2 = bank_nouns[object_.selected_value].random_noun().first()
@@ -112,7 +125,7 @@ def main():
 
         while True:
             basic_sentence = BasicSentence(subject2, verb2, object2)
-            res.append(f"{basic_sentence.get_question_sentence(blank_it)} | {basic_sentence.get_answer_sentence()}")
+            res.append(basic_sentence)
             
             try:
                 try:
@@ -125,16 +138,15 @@ def main():
         
         return res
 
-    sentence_list = urwid.Pile([
-        urwid.Text(sentence)
-        for sentence in generate_all_sentences(blank_it["blanked"])
-    ])
+    deck = genanki.Deck(
+        deck_id=1878326705,  # Hard-coded value selected by me
+        name="German::Grammar",
+    )
+
+    sentence_list = urwid.Pile(generate_all_sentences_as_buttons())
 
     def refresh_all_sentences(_, __):
-        sentence_list.widget_list = [
-            urwid.Text(sentence)
-            for sentence in generate_all_sentences(blank_it["blanked"])
-        ]
+        sentence_list.widget_list = generate_all_sentences_as_buttons()
 
     urwid.connect_signal(subject.pop_up, "select", refresh_all_sentences)
     urwid.connect_signal(verb.pop_up, "select", refresh_all_sentences)
@@ -187,6 +199,10 @@ def main():
     )
 
     loop.run()
+
+    if deck.notes:
+        genanki.Package([deck]).write_to_file("play.apkg")
+        print(f"Complete! Added {len(deck.notes)} cards. Now import play.apkg to Anki, fix any changes, and sync Anki to AnkiCloud.")
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@ import random
 import typing
 
 from sean_learns_german.constants import GermanCase
-from sean_learns_german.models.genanki_models import GermanNote, GENANKI_GRAMMAR_MODEL
+from sean_learns_german.models.genanki_models import GermanNote, GENANKI_GRAMMAR_MODEL_V2
 from sean_learns_german.models.german_models import BankNoun, Verb, Noun, Pronoun, Verb
 
 
@@ -104,12 +104,11 @@ class BasicSentence:
         question_sentence = self.get_question_sentence(blank_it)
 
         return GermanNote(
-            model=GENANKI_GRAMMAR_MODEL,
+            model=GENANKI_GRAMMAR_MODEL_V2,
             fields=[
-                _sentence_format(answer_sentence),
                 _sentence_format(question_sentence),
+                _sentence_format(answer_sentence),
                 english_answer_sentence,
-                None,  # Hint... remove it
                 "BasicSentence",
             ],
             tags=["BasicSentence"],
