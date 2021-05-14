@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 import random
 import typing
 
@@ -90,7 +91,7 @@ class BasicSentence:
             f"{self.object_.make_str(case=self.verb.requires_case)}"
         )
 
-    def to_anki_note(self) -> GermanNote:
+    def to_anki_note(self, blank_it: typing.Optional[str]) -> GermanNote:
         answer_sentence = self.get_answer_sentence()
 
         english_answer_sentence = (
@@ -99,7 +100,9 @@ class BasicSentence:
             f"{self.object_.make_english_str()}"
         )
 
-        blank_it = random.choice(['subject', 'verb', 'object'])
+        if not blank_it:
+            logging.warning("Random blank_it chosen!")
+            blank_it = random.choice(['subject', 'verb', 'object'])
 
         question_sentence = self.get_question_sentence(blank_it)
 

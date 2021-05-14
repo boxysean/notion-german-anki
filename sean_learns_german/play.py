@@ -105,14 +105,14 @@ def main():
     boxes_grid = urwid.Columns(boxes)
     blank_it = {"blanked": "verb"}  # Lazy hack to make this accessible within sub method
 
-    def add_sentence_to_deck(basic_sentence: BasicSentence, _):
-        deck.add_note(basic_sentence.to_anki_note())
+    def add_sentence_to_deck(basic_sentence: BasicSentence, blank_it: str, _):
+        deck.add_note(basic_sentence.to_anki_note(blank_it))
 
     def generate_all_sentences_as_buttons() -> typing.List[urwid.Button]:
         return [
             urwid.Button(
                 label=f"{basic_sentence.get_question_sentence(blank_it['blanked'])} | {basic_sentence.get_answer_sentence()}",
-                on_press=functools.partial(add_sentence_to_deck, basic_sentence),
+                on_press=functools.partial(add_sentence_to_deck, basic_sentence, blank_it['blanked']),
             )
             for basic_sentence in generate_all_sentences()
         ]
