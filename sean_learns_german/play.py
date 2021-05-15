@@ -2,6 +2,7 @@ import functools
 import random
 import typing
 
+import click
 import genanki
 import panwid.keymap
 from panwid.dropdown import *
@@ -56,9 +57,21 @@ class TestDropdown(KeymapMovementMixin, Dropdown):
     pass
 
 
-
-def main():
-    notion_client = GermanBankNotionClient('411a63435bf2da100d421adbd47a5a40548a5497feb1b5b1bb1c21935d0a83e8288fadf1a43c4c426e930399c65f2eafc057d089da1f5556580511c717d034deb0070423b3e5e4c5e442dd1255a3')
+@click.command()
+@click.option(
+    "--token",
+    type=str,
+    help="Get from token_v2 value stored in www.notion.so cookies. Link: chrome://settings/cookies/detail?site=www.notion.so",
+    required=True,
+    envvar="NOTION_API_TOKEN",
+)
+@click.option(
+    "--output-filename",
+    type=str,
+    default="play.apkg",
+)
+def play(token: str, output_filename: str):
+    notion_client = GermanBankNotionClient(token)
     bank_nouns = sorted([noun for noun in notion_client.get_bank_nouns()])
     bank_verbs = sorted([verb for verb in notion_client.get_bank_verbs()])
 
@@ -201,9 +214,5 @@ def main():
     loop.run()
 
     if deck.notes:
-        genanki.Package([deck]).write_to_file("play.apkg")
+        genanki.Package([deck]).write_to_file(output_filename)
         print(f"Complete! Added {len(deck.notes)} cards. Now import play.apkg to Anki, fix any changes, and sync Anki to AnkiCloud.")
-
-
-if __name__ == '__main__':
-    main()

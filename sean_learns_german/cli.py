@@ -9,6 +9,7 @@ from sean_learns_german.models.genanki_models import GermanNote
 from sean_learns_german.models.german_models import BankWord, Phrase
 from sean_learns_german.models.basic_sentence import BasicSentence
 from sean_learns_german.notion_client import GermanBankNotionClient
+from sean_learns_german.play import play
 from sean_learns_german.words import BANK_NOUNS, BANK_VERBS
 
 
@@ -23,8 +24,18 @@ def cli_group():
 
 
 @cli_group.command()
-@click.option("--token", type=str, help="Get from token_v2 value stored in www.notion.so cookies. Link: chrome://settings/cookies/detail?site=www.notion.so", required=True,)
-@click.option("--output-filename", type=str, default="output.apkg")
+@click.option(
+    "--token",
+    type=str,
+    help="Get from token_v2 value stored in www.notion.so cookies. Link: chrome://settings/cookies/detail?site=www.notion.so",
+    required=True,
+    envvar="NOTION_API_TOKEN",
+)
+@click.option(
+    "--output-filename",
+    type=str,
+    default="output.apkg",
+)
 def generate_decks(token: str, output_filename: str) -> None:
     """
     Scrapes the Notion table bank, and converts them into Anki decks ready for importing.
@@ -149,4 +160,5 @@ def generate_sentences(token: str, output_filename: str, online: bool):
 
 
 if __name__ == "__main__":
+    cli_group.add_command(play)
     cli_group()
