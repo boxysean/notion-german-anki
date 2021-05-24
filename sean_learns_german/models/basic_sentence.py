@@ -78,7 +78,7 @@ class BasicSentence:
             return _sentence_format(
                 f"{self.subject.make_str(case=GermanCase.NOMINATIVE)} "
                 f"{self.verb.conjugate(self.subject.perspective, self.subject.cardinality)} "
-                f"____"
+                f"____ "
                 f"({self.object_.make_hint(case=self.verb.requires_case)})"
             )
         else:

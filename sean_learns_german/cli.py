@@ -60,6 +60,7 @@ def generate_decks(token: str, output_filename: str) -> None:
             raise ValueError(f"Unexpected bank item {german_bank_item}")
 
         german_note = GermanNote.from_german_model(german_bank_item)
+        deck.add_note(german_note)
 
     genanki.Package(decks.values()).write_to_file(output_filename)
     click.echo(f"Complete! Now import {output_filename} to Anki, fix any changes, and sync Anki to AnkiCloud.")
