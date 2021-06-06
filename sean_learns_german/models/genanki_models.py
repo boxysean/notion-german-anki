@@ -1,3 +1,4 @@
+import logging
 import typing
 
 import genanki
@@ -13,54 +14,58 @@ class GermanNote(genanki.Note):
 
     @classmethod
     def from_german_model(cls, german_model: typing.Union[BankWord, Phrase]) -> 'GermanNote':
-        if isinstance(german_model, Verb):
-            return cls(
-                model=GENANKI_VERB_MODEL,
-                fields=[
-                    german_model.german_word,
-                    german_model.english_word,
-                    PartsOfSpeech.VERB,
-                    german_model.conj_ich_1ps,
-                    german_model.conj_du_2ps,
-                    german_model.conj_er_3ps,
-                    german_model.conj_wir_1pp,
-                    german_model.conj_ihr_2pp,
-                    german_model.conj_sie_3pp,
-                ],
-                tags=[PartsOfSpeech.VERB] + german_model.tags,
-            )
-        elif isinstance(german_model, BankNoun):
-            return GermanNote(
-                model=GENANKI_NOUN_MODEL,
-                fields=[
-                    german_model.german_word_singular,
-                    german_model.english_word,
-                    PartsOfSpeech.NOUN,
-                    german_model.gender,
-                ],
-                tags=[PartsOfSpeech.NOUN] + german_model.tags,
-            )
-        elif isinstance(german_model, BankVocabulary):
-            return GermanNote(
-                model=GENANKI_VOCABULARY_MODEL,
-                fields=[
-                    german_model.german,
-                    german_model.english,
-                    german_model.part_of_speech,
-                ],
-                tags=[german_model.part_of_speech] + german_model.tags,
-            )
-        elif isinstance(german_model, Phrase):
-            return GermanNote(
-                model=GENANKI_PHRASE_MODEL,
-                fields=[
-                    german_model.german,
-                    german_model.english,
-                ],
-                tags=german_model.tags,
-            )
-        else:
-            raise ValueError(f"Unexpected model of type {german_model.__class__.__name__}")
+        try:
+            if isinstance(german_model, Verb):
+                return cls(
+                    model=GENANKI_VERB_MODEL,
+                    fields=[
+                        german_model.german_word,
+                        german_model.english_word,
+                        PartsOfSpeech.VERB,
+                        german_model.conj_ich_1ps,
+                        german_model.conj_du_2ps,
+                        german_model.conj_er_3ps,
+                        german_model.conj_wir_1pp,
+                        german_model.conj_ihr_2pp,
+                        german_model.conj_sie_3pp,
+                    ],
+                    tags=[PartsOfSpeech.VERB] + german_model.tags,
+                )
+            elif isinstance(german_model, BankNoun):
+                return GermanNote(
+                    model=GENANKI_NOUN_MODEL,
+                    fields=[
+                        german_model.german_word_singular,
+                        german_model.english_word,
+                        PartsOfSpeech.NOUN,
+                        german_model.gender,
+                    ],
+                    tags=[PartsOfSpeech.NOUN] + german_model.tags,
+                )
+            elif isinstance(german_model, BankVocabulary):
+                    return GermanNote(
+                        model=GENANKI_VOCABULARY_MODEL,
+                        fields=[
+                            german_model.german,
+                            german_model.english,
+                            german_model.part_of_speech,
+                        ],
+                        tags=[german_model.part_of_speech] + german_model.tags,
+                    )
+            elif isinstance(german_model, Phrase):
+                return GermanNote(
+                    model=GENANKI_PHRASE_MODEL,
+                    fields=[
+                        german_model.german,
+                        german_model.english,
+                    ],
+                    tags=german_model.tags,
+                )
+            else:
+                raise ValueError(f"Unexpected model of type {german_model.__class__.__name__}")
+        except:
+            logging.error('Could not create a note from %s', german_model.german)
+            raise
 
 
 GENANKI_CSS = """.card {
