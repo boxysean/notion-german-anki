@@ -22,7 +22,8 @@ class BankWord:
 @dataclasses.dataclass
 class BankVocabulary(BankWord):
     german: str
-    english: str
+    english_word: str
+    english_synonyms: str
     part_of_speech: PartsOfSpeech
 
 
@@ -31,6 +32,7 @@ class BankNoun(BankWord):
     german_word_singular: str
     german_word_plural: str
     english_word: str
+    english_synonyms: str
     gender: NounGender
 
     def __post_init__(self):
@@ -45,6 +47,7 @@ class BankNoun(BankWord):
             german_word_singular=self.german_word_singular,
             german_word_plural=self.german_word_plural,
             english_word=self.english_word,
+            english_synonyms=self.english_synonyms,
             gender=self.gender,
             perspective=SpeechPerspective.THIRD_PERSON,
             cardinality=Cardinality.SINGULAR,
@@ -72,6 +75,7 @@ class Noun(BankNoun):
             german_word_singular=self.german_word_singular,
             german_word_plural=self.german_word_plural,
             english_word=self.english_word,
+            english_synonyms=self.english_synonyms,
             gender=self.gender,
             article_type=self.article_type.first(),
             perspective=self.perspective,
@@ -97,6 +101,7 @@ class Noun(BankNoun):
                 german_word_singular=self.german_word_singular,
                 german_word_plural=self.german_word_plural,
                 english_word=self.english_word,
+                english_synonyms=self.english_synonyms,
                 gender=self.gender,
                 article_type=rotated_article_type,
                 perspective=self.perspective,
@@ -298,6 +303,7 @@ class Pronoun:
 class Verb(BankWord):
     german_word: str
     english_word: str
+    english_synonyms: str
     conj_ich_1ps: str
     conj_du_2ps: str
     conj_er_3ps: str

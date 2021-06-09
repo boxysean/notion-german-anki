@@ -21,6 +21,7 @@ class GermanNote(genanki.Note):
                     fields=[
                         german_model.german_word,
                         german_model.english_word,
+                        german_model.english_synonyms,
                         PartsOfSpeech.VERB,
                         german_model.conj_ich_1ps,
                         german_model.conj_du_2ps,
@@ -37,21 +38,23 @@ class GermanNote(genanki.Note):
                     fields=[
                         german_model.german_word_singular,
                         german_model.english_word,
+                        german_model.english_synonyms,
                         PartsOfSpeech.NOUN,
                         german_model.gender,
                     ],
                     tags=[PartsOfSpeech.NOUN] + german_model.tags,
                 )
             elif isinstance(german_model, BankVocabulary):
-                    return GermanNote(
-                        model=GENANKI_VOCABULARY_MODEL,
-                        fields=[
-                            german_model.german,
-                            german_model.english,
-                            german_model.part_of_speech,
-                        ],
-                        tags=[german_model.part_of_speech] + german_model.tags,
-                    )
+                return GermanNote(
+                    model=GENANKI_VOCABULARY_MODEL,
+                    fields=[
+                        german_model.german,
+                        german_model.english_word,
+                        german_model.english_synonyms,
+                        german_model.part_of_speech,
+                    ],
+                    tags=[german_model.part_of_speech] + german_model.tags,
+                )
             elif isinstance(german_model, Phrase):
                 return GermanNote(
                     model=GENANKI_PHRASE_MODEL,
@@ -82,18 +85,25 @@ GENANKI_VOCABULARY_MODEL = genanki.Model(
     fields=[
         {"name": "German"},
         {"name": "English"},
+        {"name": "EnglishSynonyms"},
         {"name": "PartOfSpeech"},
     ],
     templates=[
         {
             "name": "English -> German",
-            "qfmt": "{{English}} ({{PartOfSpeech}})",
+            "qfmt": (
+                "{{English}} ({{PartOfSpeech}})"
+                "{{#EnglishSynonyms}} <i>[{{EnglishSynonyms}}]</i>{{/EnglishSynonyms}}"
+            ),
             "afmt": '{{FrontSide}}<hr id="answer">{{German}}',
         },
         {
             "name": "German -> English",
             "qfmt": "{{German}}",
-            "afmt": '{{FrontSide}}<hr id="answer">{{English}} ({{PartOfSpeech}})',
+            "afmt": (
+                '{{FrontSide}}<hr id="answer">{{English}} ({{PartOfSpeech}})'
+                "{{#EnglishSynonyms}} <i>[{{EnglishSynonyms}}]</i>{{/EnglishSynonyms}}"
+            ),
         },
     ],
     css=GENANKI_CSS,
@@ -105,6 +115,7 @@ GENANKI_NOUN_MODEL = genanki.Model(
     fields=[
         {"name": "German"},
         {"name": "English"},
+        {"name": "EnglishSynonyms"},
         {"name": "PartOfSpeech"},
         {"name": "Gender"},
     ],
@@ -117,7 +128,10 @@ GENANKI_NOUN_MODEL = genanki.Model(
         {
             "name": "German -> English",
             "qfmt": "{{Gender}} {{German}}",
-            "afmt": '{{FrontSide}}<hr id="answer">{{English}} ({{PartOfSpeech}})',
+            "afmt": (
+                '{{FrontSide}}<hr id="answer">{{English}} ({{PartOfSpeech}})'
+                "{{#EnglishSynonyms}} <i>[{{EnglishSynonyms}}]</i>{{/EnglishSynonyms}}"
+            ),
         },
     ],
     css=GENANKI_CSS,
@@ -130,6 +144,7 @@ GENANKI_VERB_MODEL = genanki.Model(
     fields=[
         {"name": "German"},
         {"name": "English"},
+        {"name": "EnglishSynonyms"},
         {"name": "PartOfSpeech"},
         {"name": "Conjugation (ich)"},
         {"name": "Conjugation (du)"},
@@ -141,13 +156,19 @@ GENANKI_VERB_MODEL = genanki.Model(
     templates=[
         {
             "name": "English -> German",
-            "qfmt": "{{English}} ({{PartOfSpeech}})",
+            "qfmt": (
+                "{{English}} ({{PartOfSpeech}})"
+                "{{#EnglishSynonyms}} <i>[{{EnglishSynonyms}}]</i>{{/EnglishSynonyms}}"
+            ),
             "afmt": '{{FrontSide}}<hr id="answer">{{German}}<br /><br />ich {{Conjugation (ich)}}, du {{Conjugation (du)}}, er/sie/es {{Conjugation (er/sie/es)}}, wir {{Conjugation (wir)}}, ihr {{Conjugation (ihr)}}, Sie {{Conjugation (Sie)}}',
         },
         {
             "name": "German -> English",
             "qfmt": "{{German}}",
-            "afmt": '{{FrontSide}}<hr id="answer">{{English}} ({{PartOfSpeech}})',
+            "afmt": (
+                '{{FrontSide}}<hr id="answer">{{English}} ({{PartOfSpeech}})'
+                "{{#EnglishSynonyms}} <i>[{{EnglishSynonyms}}]</i>{{/EnglishSynonyms}}"
+            ),
         },
     ],
     css=GENANKI_CSS,

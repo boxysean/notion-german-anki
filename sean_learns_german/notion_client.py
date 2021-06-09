@@ -27,6 +27,7 @@ class GermanBankNotionClient(notion.client.NotionClient):
                 german_word_singular=row.german,
                 german_word_plural=row.german_plural,
                 english_word=row.english,
+                english_synonyms=row.english_synonyms,
                 gender=row.gender,
                 tags=row.tags,
             )
@@ -34,6 +35,7 @@ class GermanBankNotionClient(notion.client.NotionClient):
             return Verb(
                 german_word=row.german,
                 english_word=row.english,
+                english_synonyms=row.english_synonyms,
                 conj_ich_1ps=row.conj_ich_1ps,
                 conj_du_2ps=row.conj_du_2ps,
                 conj_er_3ps=row.conj_er_3ps,
@@ -46,7 +48,8 @@ class GermanBankNotionClient(notion.client.NotionClient):
         else:
             return BankVocabulary(
                 german=row.german,
-                english=row.english,
+                english_word=row.english,
+                english_synonyms=row.english_synonyms,
                 part_of_speech=row.part_of_speech,
                 tags=row.tags,
             )
