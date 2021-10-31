@@ -1,4 +1,5 @@
 import enum
+import typing
 
 
 class RotateableEnum(enum.Enum):
@@ -24,6 +25,19 @@ class NounGender(str, RotateableEnum):
     FEMININE = 'die'
     NEUTER = 'das'
 
+    @classmethod
+    def from_string(cls, s: typing.Optional[str]) -> typing.Optional['NounGender']:
+        if s == 'der':
+            return cls.MASCULINE
+        elif s == 'die':
+            return cls.FEMININE
+        elif s == 'das':
+            return cls.NEUTER
+        elif not s:
+            return None
+        else:
+            raise ValueError(f"Unexpected value {s}")
+
 
 class PartsOfSpeech(str, enum.Enum):
     NOUN = "noun"
@@ -45,6 +59,21 @@ class GermanCase(str, RotateableEnum):
     ACCUSATIVE = "accusative"
     DATIVE = "dative"
     GENITIVE = "genitive"
+
+    @classmethod
+    def from_string(cls, s: typing.Optional[str]) -> typing.Optional['GermanCase']:
+        if s == 'nominative':
+            return cls.NOMINATIVE
+        elif s == 'accusative':
+            return cls.ACCUSATIVE
+        elif s == 'dative':
+            return cls.DATIVE
+        elif s == 'genitive':
+            return cls.GENITIVE
+        elif not s:
+            return None
+        else:
+            raise ValueError(f"Unexpected value {s}")
 
 
 class ArticleType(str, RotateableEnum):

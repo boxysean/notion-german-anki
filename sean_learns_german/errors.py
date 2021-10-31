@@ -1,14 +1,22 @@
-class MissingCategory(ValueError):
+class MissingValue(Exception):
     pass
 
 
-class MissingGender(ValueError):
+class MissingCategory(MissingValue):
     pass
 
 
-class MissingPartOfSpeech(ValueError):
+class MissingGender(MissingValue):
     pass
 
 
-class MissingGermanPluralWord(ValueError):
+class MissingGerman(MissingValue):
+    pass
+
+
+class MissingPartOfSpeech(MissingValue):
+    pass
+
+
+class MissingGermanPluralWord(MissingValue):
     pass

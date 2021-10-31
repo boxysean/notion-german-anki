@@ -3,8 +3,10 @@ import logging
 import random
 import typing
 
+import enforce_typing
+
 from sean_learns_german.constants import ArticleType, Cardinality, GermanCase, NounGender, PronounType, SpeechPerspective, PartsOfSpeech
-from sean_learns_german.errors import MissingGermanPluralWord
+from sean_learns_german.errors import MissingGender, MissingGermanPluralWord
 
 
 @dataclasses.dataclass
@@ -26,10 +28,11 @@ class BankVocabulary(BankWord):
     part_of_speech: PartsOfSpeech
 
 
+@enforce_typing.enforce_types
 @dataclasses.dataclass
 class BankNoun(BankWord):
     german_word_singular: str
-    german_word_plural: str
+    german_word_plural: typing.Optional[str]
     english_word: str
     gender: NounGender
 
@@ -290,6 +293,7 @@ class Pronoun:
             return None
 
 
+@enforce_typing.enforce_types
 @dataclasses.dataclass
 class Verb(BankWord):
     german_word: str
@@ -300,11 +304,11 @@ class Verb(BankWord):
     conj_wir_1pp: str
     conj_ihr_2pp: str
     conj_sie_3pp: str
-    requires_case: GermanCase
+    requires_case: typing.Optional[GermanCase]
 
     def __post_init__(self):
         if self.requires_case is None:
-            logging.warning("Verb %s is missing requires_case, assuming accusative", self.german_word)
+            logging.info("Verb %s is missing requires_case, assuming accusative", self.german_word)
             self.requires_case = GermanCase.ACCUSATIVE
         
         if not all([
