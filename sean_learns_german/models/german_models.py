@@ -24,7 +24,8 @@ class BankWord:
 @dataclasses.dataclass
 class BankVocabulary(BankWord):
     german: str
-    english: str
+    english_word: str
+    english_synonyms: str
     part_of_speech: PartsOfSpeech
 
 
@@ -34,6 +35,7 @@ class BankNoun(BankWord):
     german_word_singular: str
     german_word_plural: typing.Optional[str]
     english_word: str
+    english_synonyms: str
     gender: NounGender
 
     def __post_init__(self):
@@ -48,11 +50,15 @@ class BankNoun(BankWord):
             german_word_singular=self.german_word_singular,
             german_word_plural=self.german_word_plural,
             english_word=self.english_word,
+            english_synonyms=self.english_synonyms,
             gender=self.gender,
             perspective=SpeechPerspective.THIRD_PERSON,
             cardinality=Cardinality.SINGULAR,
             tags=self.tags,
         )
+
+    def __lt__(self, o):
+        return self.german_word_singular < o.german_word_singular
 
 
 
@@ -72,6 +78,7 @@ class Noun(BankNoun):
             german_word_singular=self.german_word_singular,
             german_word_plural=self.german_word_plural,
             english_word=self.english_word,
+            english_synonyms=self.english_synonyms,
             gender=self.gender,
             article_type=self.article_type.first(),
             perspective=self.perspective,
@@ -90,19 +97,22 @@ class Noun(BankNoun):
             try:
                 rotated_cardinality = self.cardinality.next()
             except StopIteration:
-                rotated_cardinality = self.cardinality.first()
                 raise
 
-        return Noun(
-            german_word_singular=self.german_word_singular,
-            german_word_plural=self.german_word_plural,
-            english_word=self.english_word,
-            gender=self.gender,
-            article_type=rotated_article_type,
-            perspective=self.perspective,
-            cardinality=rotated_cardinality,
-            tags=self.tags,
-        )
+        try:
+            return Noun(
+                german_word_singular=self.german_word_singular,
+                german_word_plural=self.german_word_plural,
+                english_word=self.english_word,
+                english_synonyms=self.english_synonyms,
+                gender=self.gender,
+                article_type=rotated_article_type,
+                perspective=self.perspective,
+                cardinality=rotated_cardinality,
+                tags=self.tags,
+            )
+        except MissingGermanPluralWord as e:
+            raise StopIteration() from e
 
     def get_article(self, case: GermanCase) -> typing.Optional[str]:
         if self.cardinality == Cardinality.PLURAL:
@@ -201,7 +211,6 @@ class Pronoun:
             try:
                 rotated_cardinality = self.cardinality.next()
             except StopIteration:
-                rotated_cardinality = self.cardinality.first()
                 raise
                 # try:
                 #     rotated_pronoun_type = self.pronoun_type.next()
@@ -298,6 +307,7 @@ class Pronoun:
 class Verb(BankWord):
     german_word: str
     english_word: str
+    english_synonyms: str
     conj_ich_1ps: str
     conj_du_2ps: str
     conj_er_3ps: str
@@ -339,3 +349,6 @@ class Verb(BankWord):
 
     def make_english_str(self) -> str:
         return self.english_word
+
+    def __lt__(self, o):
+        return self.german_word < o.german_word

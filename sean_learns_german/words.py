@@ -7,6 +7,7 @@ BANK_NOUNS = [
         german_word_singular="Mann",
         german_word_plural="Männer",
         english_word="man",
+        english_synonyms="",
         gender=NounGender.MASCULINE,
         tags=[],
     ),
@@ -14,6 +15,7 @@ BANK_NOUNS = [
         german_word_singular="Frau",
         german_word_plural="Frauen",
         english_word="woman",
+        english_synonyms="",
         gender=NounGender.FEMININE,
         tags=[],
     ),
@@ -21,6 +23,7 @@ BANK_NOUNS = [
         german_word_singular="Angebot",
         german_word_plural="Angebote",
         english_word="agreement",
+        english_synonyms="",
         gender=NounGender.NEUTER,
         tags=[],
     ),
@@ -30,6 +33,7 @@ BANK_VERBS = [
     Verb(
         german_word="haben",
         english_word="to have",
+        english_synonyms="",
         requires_case=GermanCase.ACCUSATIVE,
         conj_ich_1ps="habe",
         conj_du_2ps="habst",
@@ -42,6 +46,7 @@ BANK_VERBS = [
     Verb(
         german_word="sehen",
         english_word="to see",
+        english_synonyms="",
         requires_case=GermanCase.ACCUSATIVE,
         conj_ich_1ps="sehe",
         conj_du_2ps="siehst",
@@ -54,6 +59,7 @@ BANK_VERBS = [
     Verb(
         german_word="sein",
         english_word="to be",
+        english_synonyms="",
         requires_case=GermanCase.NOMINATIVE,
         conj_ich_1ps="bin",
         conj_du_2ps="bist",
