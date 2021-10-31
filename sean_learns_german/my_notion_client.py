@@ -54,6 +54,7 @@ class GermanBankNotionClient:
                 german_word_singular=self._parse_property(result['properties']['German']),
                 german_word_plural=self._parse_property(result['properties']['German plural']),
                 english_word=self._parse_property(result['properties']['English']),
+                english_synonyms=self._parse_property(result['properties']['English synonyms']) or "",
                 gender=NounGender.from_string(self._parse_property(result['properties']['Gender'])),
                 # tags=row.tags,
                 tags=[],
@@ -62,6 +63,7 @@ class GermanBankNotionClient:
             return Verb(
                 german_word=self._parse_property(result['properties']['German']),
                 english_word=self._parse_property(result['properties']['English']),
+                english_synonyms=self._parse_property(result['properties']['English synonyms']) or "",
                 conj_ich_1ps=self._parse_property(result['properties']['Conj (ich/1PS)']),
                 conj_du_2ps=self._parse_property(result['properties']['Conj (du/2PS)']),
                 conj_er_3ps=self._parse_property(result['properties']['Conj (er/3PS)']),
@@ -75,7 +77,8 @@ class GermanBankNotionClient:
         else:
             return BankVocabulary(
                 german=self._parse_property(result['properties']['German']),
-                english=self._parse_property(result['properties']['English']),
+                english_word=self._parse_property(result['properties']['English']),
+                english_synonyms=self._parse_property(result['properties']['English synonyms']) or "",
                 part_of_speech=self._parse_property(result['properties']['Part of speech']),
                 # tags=row.tags,
                 tags=[],

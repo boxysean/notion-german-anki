@@ -307,7 +307,7 @@ class Pronoun:
 class Verb(BankWord):
     german_word: str
     english_word: str
-    english_synonyms: str
+    english_synonyms: typing.Optional[str]
     conj_ich_1ps: str
     conj_du_2ps: str
     conj_er_3ps: str

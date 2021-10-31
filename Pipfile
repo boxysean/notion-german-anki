@@ -8,6 +8,7 @@ click = "==7.1.2"
 genanki = "==0.10.1"
 requests = "*"
 enforce-typing = "*"
+panwid = "*"
 
 [dev-packages]
 
